@@ -3,7 +3,15 @@
 Consultare _ipotesi di traccia.pdf_ per info dettagliate sulle funzionalità dell'applicazione.
 
 ## Istruzioni per l'avvio
-Installa l'ambiente pipenv (il file Pipenv triggera l'installazione di Django e Pillow).
+Per clonare il repository:
+```git clone https://github.com/154549/tecnologie_web```
+
+È richiesto Python e Pipenv.
+```
+pip install pipenv
+```
+
+Installa l'ambiente (il file Pipenv triggera l'installazione di Django e Pillow).
 ```
 pipenv install
 ```
