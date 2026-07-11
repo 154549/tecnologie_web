@@ -2,6 +2,14 @@ from users.models import Profilo, Interesse, DjangoPost, Djangroup, PostGruppo
 from django.contrib.auth.models import User
 from datetime import date
 
+def erase_db():
+    print("Cancello il DB")
+    Profilo.objects.all().delete()
+    Interesse.objects.all().delete()
+    DjangoPost.objects.all().delete()
+    Djangroup.objects.all().delete()
+    User.objects.filter(is_superuser=False).delete()
+
 
 def init_db():
 
