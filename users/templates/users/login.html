@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} Accedi {% endblock %}
+
+{% block content %}
+
+<center>
+<h1><span style="color: #2d862d;">Djang</span><span style="color: #2255cc;">Book</span></h1>
+<p>Accedi al tuo account</p>
+
+<div style="width: 300px; margin: 20px auto; text-align: left;">
+    <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Accedi" style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-size: 16px; width: 90%; font-weight: bold;">
+    </form>
+</div>
+
+<p>Non hai un account? <a href="{% url 'users:registrazione' %}">Iscriviti</a></p>
+
+</center>
+
+{% endblock %}

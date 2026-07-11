@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %} {{ object.first_name }} {{ object.last_name }}{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 700px; margin: 20px auto;">
+
+    <div style="border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            {% if not puo_vedere %}
+                <img src="/media/defaultpfp.jpg" alt="profilo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            {% elif profilo.immagine_profilo %}
+                <img src="{{ profilo.immagine_profilo.url }}" alt="profilo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888; font-size: 24px;">
+                    {{ object.first_name|truncatechars:1 }}{{ object.last_name|truncatechars:1 }}
+                </div>
+            {% endif %}
+
+            <div>
+                <h2>{{ object.first_name }} {{ object.last_name }}
+                    {% if profilo.is_privato %}
+                        <small style="color: red;">[Privato]</small>
+                    {% else %}
+                        <small style="color: green;">[Pubblico]</small>
+                    {% endif %}
+                </h2>
+                {% if puo_vedere %}
+                    {% if profilo.eta %}<p>{{ profilo.eta }} anni</p>{% endif %}
+                    <p>{{ profilo.bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+
+        {% if puo_vedere and profilo.interessi.all %}
+        <p>Interessi:
+            {% for interesse in profilo.interessi.all %}
+                <a href="{% url 'users:risultatiricerca' query=interesse.nome %}">{{ interesse }}</a>
+            {% endfor %}
+        </p>
+        {% endif %}
+
+        <p>
+        {% if is_owner %}
+            <a href="{% url 'users:modificaprofilo' %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">Modifica profilo</button></a>
+            <a href="{% url 'users:listaamici' username=object.username %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">I miei amici</button></a>
+        {% elif is_amico %}
+            <a href="{% url 'users:rimuoviamico' username=object.username %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(255,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 14px;">Rimuovi amicizia</button></a>
+            <a href="{% url 'users:listaamici' username=object.username %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">Amici</button></a>
+        {% elif richiesta_inviata %}
+            <em>Richiesta già inviata!</em>
+        {% elif richiesta_ricevuta %}
+            <em>Ti ha inviato una richiesta - vai in <a href="{% url 'users:richieste' %}">Richieste</a></em>
+        {% else %}
+            <form method="post" action="{% url 'users:inviarichiesta' username=object.username %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-weight: bold; font-size: 14px;">Chiedi Amicizia</button>
+            </form>
+        {% endif %}
+        </p>
+
+        {% if is_owner and not request.user.is_staff %}
+            {% if richiesta_mod_inviata %}
+                <p style="color: grey; font-size: 12px;">Richiesta di moderazione inviata</p>
+            {% else %}
+                <form method="post" action="{% url 'users:richiedimoderazione' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: grey; font-size: 12px; cursor: pointer; padding: 0;">Richiedi Moderazione</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if is_owner and request.user.is_staff %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+        <h3>Segnalazioni da moderare</h3>
+        {% for s in segnalazioni %}
+        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <p><strong>Tipo:</strong> {{ s.tipo }} &nbsp; <strong>Da:</strong> {{ s.segnalatore.first_name }} {{ s.segnalatore.last_name }}</p>
+            <p><strong>Motivo:</strong> {{ s.motivo }}</p>
+
+            {% if s.post_segnalato %}
+                <p><strong>Post:</strong> "{{ s.post_segnalato.testo|truncatechars:100 }}" di {{ s.post_segnalato.autore.first_name }}</p>
+            {% endif %}
+            {% if s.commento_segnalato %}
+                <p><strong>Commento:</strong> "{{ s.commento_segnalato.testo|truncatechars:100 }}" di {{ s.commento_segnalato.autore.first_name }}</p>
+            {% endif %}
+
+            <small>{{ s.data_segnalazione|timesince }} fa</small>
+
+            <p>
+                <a href="{% url 'users:risolvisegnalazione' pk=s.pk %}"><button style="background-color: rgba(255,0,0,0.3); cursor: pointer; border: none;">Rimuovi Contenuto</button></a>
+                &nbsp;
+                <a href="{% url 'users:ignorasegnalazione' pk=s.pk %}"><button style="background-color: #eee; cursor: pointer; border: none;">Ignora</button></a>
+            </p>
+        </div>
+        {% empty %}
+        <p>Nessuna segnalazione aperta.</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not puo_vedere %}
+        <p>Questo profilo è privato. Devi essere amico per visualizzare i suoi post.</p>
+    {% else %}
+
+        {% if is_owner %}
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+            <h3>Scrivi un nuovo Django...</h3>
+            <form method="post" action="{% url 'users:creadjango' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'users:profilo' username=object.username %}">
+                {{ form_django.as_p }}
+                <input type="submit" value="Pubblica">
+            </form>
+        </div>
+        {% endif %}
+
+        {% for post in djangos %}
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+            <p><strong>{{ post.autore.first_name }} {{ post.autore.last_name }}</strong> - {{ post.data_pubblicazione|timesince }} fa</p>
+            <p>{{ post.testo }}</p>
+            {% if post.immagine %}
+                <img src="{{ post.immagine.url }}" alt="immagine" style="max-width: 100%; max-height: 400px;">
+            {% endif %}
+
+            <p>
+                <a href="{% url 'users:togglelike' pk=post.pk %}?next={% url 'users:profilo' username=object.username %}">
+                    {% if post.pk in liked_ids %}Unlike{% else %}Mi Piace{% endif %}
+                </a>
+                ({{ post.conta_likes }}) |
+                {{ post.conta_commenti }} commenti
+                {% if post.autore == request.user %}
+                    | <a href="{% url 'users:cancelladjango' pk=post.pk %}">Elimina</a>
+                {% endif %}
+                &nbsp; <a href="{% url 'users:segnalapost' pk=post.pk %}" style="color: grey; font-size: 12px;">Segnala</a>
+            </p>
+
+            {% for commento in post.commenti.all %}
+            <div style="margin-left: 20px; padding: 5px; border-left: 2px solid #ddd; margin-bottom: 5px;">
+                <strong><a href="{% url 'users:profilo' username=commento.autore.username %}">{{ commento.autore.first_name }}</a></strong>: {{ commento.testo }}
+                <small>({{ commento.data_pubblicazione|timesince }} fa)</small>
+                {% if commento.autore == request.user %}
+                    <a href="{% url 'users:cancellacommento' pk=commento.pk %}?next={% url 'users:profilo' username=object.username %}">x</a>
+                {% endif %}
+                &nbsp; <a href="{% url 'users:segnalacommento' pk=commento.pk %}" style="color: grey; font-size: 11px;">Segnala</a>
+            </div>
+            {% endfor %}
+
+            <form method="post" action="{% url 'users:aggiungicommento' pk=post.pk %}" style="margin-top: 5px;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'users:profilo' username=object.username %}">
+                <input type="text" name="testo" placeholder="Scrivi un commento..." style="width: 70%;">
+                <input type="submit" value="Commenta">
+            </form>
+        </div>
+        {% endfor %}
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %} Iscriviti {% endblock %}
+
+{% block content %}
+
+<center>
+<h2><span style="color: #2d862d;">Djang</span><span style="color: #2255cc;">Book</span> - Iscriviti</h2>
+</center>
+
+<div style="width: 350px; margin: 20px auto;">
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+
+        <h3>Dati Account</h3>
+        {{ form_user.as_p }}
+
+        <br>
+
+        <h3>Il tuo Profilo</h3>
+        {{ form_profilo.as_p }}
+
+        <br>
+        <input type="submit" value="Iscriviti" style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-size: 16px; width: 100%; font-weight: bold;">
+    </form>
+
+    <br>
+    <center><p>Hai già un account? <a href="{% url 'users:login' %}">Accedi</a></p></center>
+</div>
+
+{% endblock %}

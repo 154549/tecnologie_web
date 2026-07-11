@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} Amici di {{ utente_profilo.first_name }} {% endblock %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 20px auto;">
+    <h2>Amici di {{ utente_profilo.first_name }} {{ utente_profilo.last_name }}</h2>
+
+    {% for amico in object_list %}
+    <ul>
+        <a href="{% url 'users:profilo' username=amico.username %}">{{ amico.first_name }} {{ amico.last_name }}</a>
+    </ul>
+    {% empty %}
+    <p>Nessun amico.</p>
+    {% endfor %}
+
+    <br>
+    <a href="{% url 'users:profilo' username=utente_profilo.username %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">Torna al Profilo</button></a>
+</div>
+
+{% endblock %}

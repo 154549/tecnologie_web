@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %} Risultati per "{{ query }}" {% endblock %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 20px auto;">
+    <h2>Risultati per "{{ query }}"</h2>
+
+    {% if object_list.count == 0 %}
+    <p>La ricerca non ha portato a risultati.</p>
+    {% else %}
+
+        {% for utente in object_list %}
+        <ul>
+            <a href="{% url 'users:profilo' username=utente.username %}">{{ utente.first_name }} {{ utente.last_name }}</a>
+            {% for interesse in utente.profilo.interessi.all %}
+                {{ interesse }}
+            {% endfor %}
+        </ul>
+        {% endfor %}
+
+    {% endif %}
+
+    {% if gruppi %}
+    <br>
+    <h3>Gruppi trovati</h3>
+    {% for gruppo in gruppi %}
+    <ul>
+        <a href="{% url 'users:dettagliogruppo' pk=gruppo.pk %}">{{ gruppo.nome }}</a>
+        - {{ gruppo.conta_membri }} membri
+    </ul>
+    {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}

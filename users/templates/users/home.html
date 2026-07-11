@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<center>
+<h1><span style="color: #2d862d;">Djang</span><span style="color: #2255cc;">Book</span> </h1>
+    <p> Benvenuto! </p>
+<br>
+
+<a href="{% url 'users:login' %}" style="text-decoration: none;">
+    <button type="button" style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-size: 16px; width: 130px; font-weight: bold;">Accedi</button>
+</a>
+<a href="{% url 'users:registrazione' %}" style="text-decoration: none;">
+    <button type="button" style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-size: 16px; width: 130px; font-weight: bold;">Iscriviti</button>
+</a>
+
+<br><br>
+
+{% if top_interessi %}
+<h3>Interessi più popolari su DjangBook</h3>
+<ul style="list-style: none;">
+    {% for interesse in top_interessi %}
+    <li>{{ interesse }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+</center>
+
+{% endblock %}

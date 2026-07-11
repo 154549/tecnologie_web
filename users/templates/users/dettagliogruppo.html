@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %} {{ object.nome }} {% endblock %}
+
+{% block content %}
+
+<div style="max-width: 700px; margin: 20px auto;">
+
+    <div style="border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            {% if object.immagine %}
+                <img src="{{ object.immagine.url }}" alt="gruppo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            {% else %}
+                <img src="/media/defaultgroup.png" alt="gruppo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            {% endif %}
+            <div>
+                <h2>{{ object.nome }}
+                    {% if object.is_privato %}
+                        <small style="color: red;">[Privato]</small>
+                    {% else %}
+                        <small style="color: green;">[Pubblico]</small>
+                    {% endif %}
+                </h2>
+                <p>{{ object.descrizione }}</p>
+            </div>
+        </div>
+        <p>{{ object.conta_membri }} membri &nbsp; {{ object.conta_post }} post</p>
+
+        {% if object.interessi.all %}
+        <p>Interessi:
+            {% for interesse in object.interessi.all %}
+                <a href="{% url 'users:risultatiricerca' query=interesse.nome %}">{{ interesse }}</a>
+            {% endfor %}
+        </p>
+        {% endif %}
+
+        <p>Creato da <a href="{% url 'users:profilo' username=object.creatore.username %}">{{ object.creatore.first_name }} {{ object.creatore.last_name }}</a></p>
+
+        <p>
+        {% if not is_membro %}
+            {% if invito_ricevuto %}
+                <em>Sei stato invitato in questo gruppo.</em>
+                <a href="{% url 'users:accettainvitogruppo' pk=invito_ricevuto.pk %}" style="text-decoration: none;"><button style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-weight: bold;">Accetta invito</button></a>
+                <a href="{% url 'users:rifiutainvitogruppo' pk=invito_ricevuto.pk %}" style="text-decoration: none;"><button style="background-color: rgba(255,0,0,0.3); cursor: pointer; font-weight: bold;">Rifiuta invito</button></a>
+            {% elif not object.is_privato %}
+                <a href="{% url 'users:iscrivigruppo' pk=object.pk %}" style="text-decoration: none;"><button style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-weight: bold;">Iscriviti</button></a>
+            {% else %}
+                <em>Gruppo privato: entra solo su invito di un amministratore.</em>
+            {% endif %}
+        {% else %}
+            {% if is_creatore %}
+                <form method="post" action="{% url 'users:modificaimmaginegruppo' pk=object.pk %}" enctype="multipart/form-data" style="display: inline;" id="formImgGruppo">
+                    {% csrf_token %}
+                    <input type="file" name="immagine" accept="image/*" style="display: none;" id="inputImgGruppo" onchange="document.getElementById('formImgGruppo').submit();">
+                    <button type="button" onclick="document.getElementById('inputImgGruppo').click();" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">Modifica immagine</button>
+                </form>
+                <a href="{% url 'users:cancellagruppo' pk=object.pk %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(255,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 14px;">Elimina Gruppo</button></a>
+            {% else %}
+                <a href="{% url 'users:abbandonagruppo' pk=object.pk %}" style="text-decoration: none;"><button type="button" style="background-color: rgba(255,0,0,0.3); cursor: pointer; font-weight: bold; font-size: 14px;">Abbandona</button></a>
+            {% endif %}
+            {% if is_admin %}
+                <form method="post" action="{% url 'users:modificavisibilitagruppo' pk=object.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background-color: rgba(24,119,242,0.2); cursor: pointer; font-weight: bold; font-size: 14px;">
+                        {% if object.is_privato %}Rendi pubblico{% else %}Rendi privato{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+        </p>
+
+        {% if is_admin %}
+        <p><strong>Membri:</strong></p>
+        {% for membro in object.membri.all %}
+            <span>
+                <a href="{% url 'users:profilo' username=membro.username %}">{{ membro.first_name }}</a>
+                {% if membro != object.creatore and is_admin %}
+                    <a href="{% url 'users:espellimembro' pk=object.pk username=membro.username %}" style="color: red; font-size: 12px;">[espelli]</a>
+                {% endif %}
+            </span>&nbsp;&nbsp;
+        {% endfor %}
+
+        <p><strong>Invita amici nel gruppo:</strong></p>
+        {% for amico in amici_invitabili %}
+            <span>
+                {{ amico.first_name }} {{ amico.last_name }}
+                {% if amico.pk in invitati_pk %}
+                    <small style="color: grey;">(invito inviato)</small>
+                {% else %}
+                    <form method="post" action="{% url 'users:invitagruppo' pk=object.pk username=amico.username %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="font-size: 12px; cursor: pointer;">Invita</button>
+                    </form>
+                {% endif %}
+            </span>&nbsp;&nbsp;
+        {% empty %}
+            <p><small>Nessun amico da invitare al momento.</small></p>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    {% if is_membro %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+        <h3>Scrivi nel gruppo</h3>
+        <form method="post" action="{% url 'users:creapostgruppo' pk=object.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form_post.as_p }}
+            <input type="submit" value="Pubblica">
+        </form>
+    </div>
+    {% endif %}
+
+    {% if post_gruppo %}
+    {% for post in post_gruppo %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+        <p>
+            <strong><a href="{% url 'users:profilo' username=post.autore.username %}">{{ post.autore.first_name }} {{ post.autore.last_name }}</a></strong>
+            - {{ post.data_pubblicazione|timesince }} fa
+        </p>
+        <p>{{ post.testo }}</p>
+        {% if post.immagine %}
+            <img src="{{ post.immagine.url }}" alt="immagine" style="max-width: 100%; max-height: 400px;">
+        {% endif %}
+        <p>
+            {% if is_membro %}
+                <a href="{% url 'users:togglelikegruppo' pk=post.pk %}">
+                    {% if post.pk in liked_ids_gruppo %}Unlike{% else %}Mi Piace{% endif %}
+                </a>
+                ({{ post.conta_likes }}) |
+                {{ post.conta_commenti }} commenti
+            {% endif %}
+            {% if post.autore == request.user or is_admin %}
+                | <a href="{% url 'users:cancellapostgruppo' pk=post.pk %}" style="color: red; font-size: 12px;">Elimina</a>
+            {% endif %}
+        </p>
+
+        {% for commento in post.commenti.all %}
+        <div style="margin-left: 20px; padding: 5px; border-left: 2px solid #ddd; margin-bottom: 5px;">
+            <strong><a href="{% url 'users:profilo' username=commento.autore.username %}">{{ commento.autore.first_name }}</a></strong>: {{ commento.testo }}
+            <small>({{ commento.data_pubblicazione|timesince }} fa)</small>
+            {% if commento.autore == request.user %}
+                <a href="{% url 'users:cancellacommentogruppo' pk=commento.pk %}">x</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if is_membro %}
+        <form method="post" action="{% url 'users:aggiungicommentogruppo' pk=post.pk %}" style="margin-top: 5px;">
+            {% csrf_token %}
+            <input type="text" name="testo" placeholder="Scrivi un commento..." style="width: 70%;">
+            <input type="submit" value="Commenta">
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<center>
+<h2>Cerca Utenti</h2>
+
+<form method="post" action="{% url 'users:cerca' %}">{% csrf_token %}
+    <input type="text" name="query" placeholder="Nome, cognome o #interesse...">
+    <input type="submit" value="Cerca">
+</form>
+
+</center>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 20px auto;">
+
+    {% if not object_list and not inviti_gruppo %}
+    <p>Non c'è niente da controllare!</p>
+    {% endif %}
+
+    {% for richiesta in object_list %}
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <a href="{% url 'users:profilo' username=richiesta.mittente.username %}">
+                {{ richiesta.mittente.first_name }} {{ richiesta.mittente.last_name }}
+            </a>
+            <small>({{ richiesta.data_invio|timesince }} fa)</small>
+        </div>
+        <div>
+            <a href="{% url 'users:accettarichiesta' pk=richiesta.pk %}">
+                <button style="background-color: rgba(0,255,0,0.4); cursor: pointer; text-decoration: none;">Accetta</button>
+            </a>
+            <a href="{% url 'users:rifiutarichiesta' pk=richiesta.pk %}">
+                <button style="background-color: rgba(255,0,0,0.3); cursor: pointer; text-decoration: none;">Rifiuta</button>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for invito in inviti_gruppo %}
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            Invito nel gruppo <a href="{% url 'users:dettagliogruppo' pk=invito.gruppo.pk %}">{{ invito.gruppo.nome }}</a>
+            da {{ invito.mittente.first_name }} {{ invito.mittente.last_name }}
+            <small>({{ invito.data_invio|timesince }} fa)</small>
+        </div>
+        <div>
+            <a href="{% url 'users:accettainvitogruppo' pk=invito.pk %}">
+                <button style="background-color: rgba(0,255,0,0.4); cursor: pointer; text-decoration: none;">Accetta</button>
+            </a>
+            <a href="{% url 'users:rifiutainvitogruppo' pk=invito.pk %}">
+                <button style="background-color: rgba(255,0,0,0.3); cursor: pointer; text-decoration: none;">Rifiuta</button>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

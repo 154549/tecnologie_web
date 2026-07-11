@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width: 700px; margin: 20px auto;">
+
+    <h2>Di cosa parlano gli amici?</h2>
+
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px;">
+        <h3>Scrivi un nuovo Django</h3>
+        <form method="post" action="{% url 'users:creadjango' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'users:feed' %}">
+            {{ form_django.as_p }}
+            <input type="submit" value="Pubblica">
+        </form>
+    </div>
+
+    {% for post in djangos %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;">
+        <p>
+            <strong>
+                <a href="{% url 'users:profilo' username=post.autore.username %}">
+                    {{ post.autore.first_name }} {{ post.autore.last_name }}
+                </a>
+            </strong>
+            - {{ post.data_pubblicazione|timesince }} fa
+        </p>
+        <p>{{ post.testo }}</p>
+        {% if post.immagine %}
+            <img src="{{ post.immagine.url }}" alt="immagine" style="max-width: 100%; max-height: 400px;">
+        {% endif %}
+
+        <p>
+            <a href="{% url 'users:togglelike' pk=post.pk %}?next={% url 'users:feed' %}">
+                {% if post.pk in liked_ids %}Unlike{% else %}Mi Piace{% endif %}
+            </a>
+            ({{ post.conta_likes }}) |
+            {{ post.conta_commenti }} commenti
+            {% if post.autore == user %}
+                | <a href="{% url 'users:cancelladjango' pk=post.pk %}">Elimina</a>
+            {% endif %}
+            &nbsp; <a href="{% url 'users:segnalapost' pk=post.pk %}" style="color: grey; font-size: 12px;">Segnala</a>
+        </p>
+
+        {% for commento in post.commenti.all %}
+        <div style="margin-left: 20px; padding: 5px; border-left: 2px solid #ddd; margin-bottom: 5px;">
+            <strong>
+                <a href="{% url 'users:profilo' username=commento.autore.username %}">{{ commento.autore.first_name }}</a>
+            </strong>: {{ commento.testo }}
+            <small>({{ commento.data_pubblicazione|timesince }} fa)</small>
+            {% if commento.autore == user %}
+                <a href="{% url 'users:cancellacommento' pk=commento.pk %}?next={% url 'users:feed' %}">x</a>
+            {% endif %}
+            &nbsp; <a href="{% url 'users:segnalacommento' pk=commento.pk %}" style="color: grey; font-size: 11px;">Segnala</a>
+        </div>
+        {% endfor %}
+
+        <form method="post" action="{% url 'users:aggiungicommento' pk=post.pk %}" style="margin-top: 5px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'users:feed' %}">
+            <input type="text" name="testo" placeholder="Scrivi un commento..." style="width: 70%;">
+            <input type="submit" value="Commenta">
+        </form>
+
+    </div>
+    {% empty %}
+    <p>Niente da mostrare!</p>
+    {% endfor %}
+
+</div>
+
+{% if utenti_suggeriti %}
+<div style="max-width: 700px; margin: 0 auto 20px;">
+    <h3>Persone che potresti conoscere</h3>
+    <ul>
+        {% for prof in utenti_suggeriti %}
+        <li>
+            <a href="{% url 'users:profilo' username=prof.user.username %}">{{ prof.user.first_name }} {{ prof.user.last_name }}</a>
+            -
+            {% for interesse in prof.interessi.all %}
+                {{ interesse }}
+            {% endfor %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if gruppi_suggeriti %}
+<div style="max-width: 700px; margin: 0 auto 20px;">
+    <h3>Gruppi che potrebbero interessarti</h3>
+    <ul>
+        {% for gruppo in gruppi_suggeriti %}
+        <li>
+            <a href="{% url 'users:dettagliogruppo' pk=gruppo.pk %}">{{ gruppo.nome }}</a>
+            -
+            {% for interesse in gruppo.interessi.all %}
+                {{ interesse }}
+            {% endfor %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% endblock %}

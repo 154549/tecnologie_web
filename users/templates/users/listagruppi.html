@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %} Djangroups {% endblock %}
+
+{% block content %}
+
+<div style="max-width: 700px; margin: 20px auto;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>I miei Djangroups</h2>
+        <a href="{% url 'users:creagruppo' %}"><button style="background-color: rgba(0,255,0,0.4); cursor: pointer; font-weight: bold; border: none;">+ Crea Djangroup</button></a>
+    </div>
+
+    {% for gruppo in miei_gruppi %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 10px;">
+        <h3><a href="{% url 'users:dettagliogruppo' pk=gruppo.pk %}">{{ gruppo.nome }}</a></h3>
+        <p>{{ gruppo.descrizione|truncatechars:100 }}</p>
+        <small>{{ gruppo.conta_membri }} membri &nbsp; {{ gruppo.conta_post }} post</small>
+    </div>
+    {% empty %}
+    <p>Non fai parte di nessun gruppo.</p>
+    {% endfor %}
+
+
+</div>
+
+{% endblock %}
